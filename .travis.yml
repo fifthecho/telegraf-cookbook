@@ -8,8 +8,6 @@ rvm:
   - 2.1
   - 2.2
 
-bundler_args: --without development kitchen_vagrant
-
 notifications:
   webhooks:
     urls:
