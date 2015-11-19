@@ -13,9 +13,6 @@ when 'rhel'
     options '--nogpgcheck'
     action :install
   end
-  # file '/tmp/telegraf.rpm' do
-  #   action :delete
-  # end
 when 'debian'
   remote_file "#{Chef::Config[:file_cache_path]}/telegraf.deb" do
       source "https://s3.amazonaws.com/get.influxdb.org/telegraf/telegraf_#{node['telegraf']['version']}_amd64.deb"
@@ -25,16 +22,13 @@ when 'debian'
       source "#{Chef::Config[:file_cache_path]}/telegraf.deb"
     action :install
   end
-  # file '/tmp/telegraf.deb' do
-  #   action :delete
-  # end
 end
-
-service 'telegraf' do
-  action :enable
-end
-
 
 template '/etc/opt/telegraf/telegraf.conf' do
   source 'telegraf.conf.erb'
+end
+
+service 'telegraf' do
+  supports :status => true, :restart => true, :reload => true
+  action [:start, :enable]
 end

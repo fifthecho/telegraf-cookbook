@@ -26,6 +26,8 @@ platforms:
   - name: ubuntu-12.04
   - name: ubuntu-14.04
   - name: centos-5.11
+    busser:
+      sudo: true
   - name: centos-6.7
   - name: centos-7.1
 
