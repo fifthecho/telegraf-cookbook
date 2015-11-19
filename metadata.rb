@@ -1,0 +1,7 @@
+name 'telegraf'
+maintainer 'Jeff Moody'
+maintainer_email 'fifthecho@gmail.com'
+license 'all_rights'
+description 'Installs/Configures telegraf'
+long_description 'Installs/Configures telegraf the InfluxDB metrics agent'
+version '0.0.1'
