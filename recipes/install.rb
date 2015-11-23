@@ -23,12 +23,3 @@ when 'debian'
     action :install
   end
 end
-
-template '/etc/opt/telegraf/telegraf.conf' do
-  source 'telegraf.conf.erb'
-end
-
-service 'telegraf' do
-  supports :status => true, :restart => true, :reload => true
-  action [:start, :enable]
-end

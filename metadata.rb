@@ -4,7 +4,7 @@ maintainer_email 'fifthecho@gmail.com'
 license 'Apache v2.0'
 description 'Installs/Configures telegraf'
 long_description 'Installs/Configures telegraf the InfluxDB metrics agent'
-version '0.0.1'
+version '0.0.5'
 
 supports 'ubuntu'
 supports 'debian'

@@ -4,9 +4,7 @@
 #
 # Copyright (c) 2015 Jeff Moody, All Rights Reserved.
 
-default['telegraf']['version'] = '0.2.0'
-default['telegraf']['rpm_checksum'] = 'ba6b796aa3bd38272da79d569dd5b925'
-default['telegraf']['deb_checksum'] = '9c34466f5d514e1ceac3543ac2aa2ccf'
+default['telegraf']['version'] = '0.2.2'
 
 default['telegraf']['tags'] = {}
 default['telegraf']['interval'] = '10s'
