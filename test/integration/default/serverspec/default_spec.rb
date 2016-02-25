@@ -11,7 +11,7 @@ describe 'telegraf::default' do
     it { should be_installed }
   end
 
-  describe file('/etc/opt/telegraf/telegraf.conf') do
+  describe file('/etc/telegraf/telegraf.conf') do
   	it {should exist}
   	it {should be_file}
     its(:content) { should match /outputs.influxdb/ }
