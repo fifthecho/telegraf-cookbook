@@ -42,7 +42,7 @@ if packages.include?('mongodb-org-server') or packages.include?('mongo-10gen-ser
   node.default['telegraf']['mongodb'] = true
 end
 
-if packages.include?('mariadb') or packages.include?('mysql-community-server')
+if packages.include?('mariadb') or packages.include?('mysql-community-server') or packages.include?('mysql-server')
   node.default['telegraf']['mysql'] = true
 end
 

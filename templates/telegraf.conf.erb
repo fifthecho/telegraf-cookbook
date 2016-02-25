@@ -1,6 +1,6 @@
 # Telegraf configuration delivered by Chef
 # Changes to this file will be smashed by the Chef Client.
-[tags]
+[global_tags]
   <% node['telegraf']['tags'].each do |key, value| %>
      <%= key %>: "<%= value %>"
     <% end -%>
@@ -8,9 +8,13 @@
 [agent]
   interval = "<%= node['telegraf']['interval'] %>"
   round_interval = <%= node['telegraf']['round_interval'] %>
+  metric_buffer_limit = <%= node['telegraf']['metric_buffer_limit'] %>
+  flush_buffer_when_full = <%= node['telegraf']['flush_buffer_when_full'] %>
+  collection_jitter = "<%= node['telegraf']['collection_jitter'] %>"
   flush_interval = "<%= node['telegraf']['flush_interval'] %>"
   flush_jitter = "<%= node['telegraf']['flush_jitter'] %>"
   debug = <%= node['telegraf']['debug'] %>
+  quiet = <%= node['telegraf']['quiet'] %>
   <% if node['telegraf']['hostname'] == true %>
   hostname = "<%= node['fqdn'] %>"
   <% end -%>
@@ -21,18 +25,37 @@
 ###############################################################################
 
 [outputs]
-<% if node['telegraf']['output'].include?('amqp') %>
-[outputs.amqp]
+<% if node['telegraf']['output'].include?('amon') %>
+[[outputs.amon]]
+  server_key = "<%= node['telegraf']['amon_server_key'] %>"
+  amon_instance = "<%= node['telegraf']['amon_instance'] %>"
+  timeout = "<%= node['telegraf']['amon_timeout'] %>"
+<% end -%><% if node['telegraf']['output'].include?('amqp') %>
+[[outputs.amqp]]
   # AMQP url
   url = "amqp://<%= node['telegraf']['amqp_host'] %>:<%= node['telegraf']['amqp_port'] %>/<%= node['telegraf']['amqp_vhost'] %>"
   exchange = "<%= node['telegraf']['amqp_exchange'] %>"
   routing_tag = "<%= node['telegraf']['amqp_routing_tag'] %>"
+  data_format = "<%= node['telegraf']['amqp_data_format'] %>"
+<% end -%><% if node['telegraf']['output'].include?('cloudwatch') %>
+[[outputs.cloudwatch]]
+  region = '<%= node['telegraf']['cloudwatch_region'] %>'
+  namespace = '<%= node['telegraf']['cloudwatch_namespace'] %>'
 <% end -%><% if node['telegraf']['output'].include?('datadog') %>
-[outputs.datadog]
+[[outputs.datadog]]
   apikey = "<%= node['telegraf']['datadog_apikey'] %>"
   timeout = "<%= node['telegraf']['datadog_timeout'] %>s"
+<% end -%><% if node['telegraf']['output'].include?('file') %>
+[[outputs.file]]
+  files = <%= node['telegraf']['file_files'].inspect %>
+  data_format = "<%= node['telegraf']['file_format'] %>"
+<% end -%><% if node['telegraf']['output'].include?('graphite') %>
+[[outputs.graphite]]
+  servers = <%= node['telegraf']['graphite_servers'].inspect %>
+  prefix = "<%= node['telegraf']['graphite_prefix'] %>"
+  timeout = <%= node['telegraf']['graphite_timeout'] %>
 <% end -%><% if node['telegraf']['output'].include?('influxdb') %>
-[outputs.influxdb]
+[[outputs.influxdb]]
   urls = <%= node['telegraf']['influxdb_hosts'].inspect %>
   database = "<%= node['telegraf']['influxdb_database'] %>"
   precision = "<%= node['telegraf']['influxdb_precision'] %>"
@@ -41,63 +64,101 @@
   password = "<%= node['telegraf']['influxdb_auth_password'] %>" <% end -%>
   user_agent = "<%= node['telegraf']['influxdb_user_agent'] %>"
 <% end -%><% if node['telegraf']['output'].include?('kafka') %>
-[outputs.kafka]
+[[outputs.kafka]]
   brokers = <%= node['telegraf']['kafka_brokers'].inspect %> 
   topic = "<%= node['telegraf']['kafka_topic'] %>"
   routing_tag = "<%= node['telegraf']['kafka_routing_tag'] %>"
+  data_format = "<%= node['telegraf']['kafka_data_format'] %>"
+<% end -%><% if node['telegraf']['output'].include?('kinesis') %>
+[[outputs.kinesis]]
+  region = "<%= node['telegraf']['kinesis_region'] %>"
+  streamname = "<%= node['telegraf']['kinesis_streamname'] %>"
+  partitionkey = "<%= node['telegraf']['kinesis_partitionkey'] %>"
+  format = "<%= node['telegraf']['kinesis_format'] %>"
+  debug = <%= node['telegraf']['kinesis_debug'] %>
 <% end -%><% if node['telegraf']['output'].include?('librato') %>
-[outputs.librato]
+[[outputs.librato]]
   api_user = "<%= node['telegraf']['librato_api_user'] %>"
   api_token = "<%= node['telegraf']['librato_api_token'] %>"
   source_tag = "<%= node['telegraf']['librato_source_tag'] %>"
   timeout = "<%= node['telegraf']['librato_timeout'] %>s"
 <% end -%><% if node['telegraf']['output'].include?('mqtt') %>
-[outputs.mqtt]
+[[outputs.mqtt]]
   servers = <%= node['telegraf']['mqtt_servers'].inspect %>
   topic_prefix = "<%= node['telegraf']['mqtt_topic_prefix'] %>"
   <% if node['telegraf']['mqtt_auth'] == true %>
   username = "<%= node['telegraf']['mqtt_username'] %>"
   password = "<%= node['telegraf']['mqtt_password'] %>" <% end -%>
+  data_format = "<%= node['telegraf']['mqtt_format'] %>"
+<% end -%><% if node['telegraf']['output'].include?('nsq') %>
+[[outputs.nsq]]
+  server = "<%= node['telegraf']['nsq_server'] %>"
+  topic = "<%= node['telegraf']['nsq_topic'] %>"
+  data_format = "<%= node['telegraf']['nsq_format'] %>"
 <% end -%><% if node['telegraf']['output'].include?('opentsdb') %>
-[outputs.opentsdb]
+[[outputs.opentsdb]]
   prefix = "<%= node['telegraf']['opentsdb_prefix'] %>"
   host = "<%= node['telegraf']['opentsdb_telnet_mode_host'] %>"
   port = <%= node['telegraf']['opentsdb_telnet_mode_port'] %>
   debug = <%= node['telegraf']['opentsdb_debug'] %>
+<% end -%><% if node['telegraf']['output'].include?('prometheus_client') %>
+[[outputs.prometheus_client]]
+  listen = "<%= node['telegraf']['prometheus_client_listen'] %>"
+<% end -%><% if node['telegraf']['output'].include?('riemann') %>
+[[outputs.riemann]]
+  url = "<%= node['telegraf']['riemann_url'] %>"
+  transport = "<%= node['telegraf']['riemann_transport'] %>"
+  separator = "<%= node['telegraf']['riemann_seperator'] %>"
 <% end -%>
-
 ###############################################################################
 #                                  PLUGINS                                    #
 ###############################################################################
 
-<% if node['telegraf']['aerospike'] == true %>[aerospike]
+<% if node['telegraf']['aerospike'] == true %>[[inputs.aerospike]]
   servers = <%= node['telegraf']['aerospike_servers'].inspect %>
-<% end -%><% if node['telegraf']['apache'] == true %>[apache]
+<% end -%><% if node['telegraf']['apache'] == true %>[[inputs.apache]]
   urls = <%= node['telegraf']['apache_status_urls'].inspect %>
-<% end -%><% if node['telegraf']['bcache'] == true %>[bcache]<% if node['telegraf']['bcache_devs'].length > 0 %>
-  bcacheDevs = <%= node['telegraf']['bcache_devs'].inspect %>
-  <% end -%>
-<% end -%><% if node['telegraf']['cpu'] == true %>[cpu]
+<% end -%><% if node['telegraf']['bcache'] == true %>[[inputs.bcache]]<% if node['telegraf']['bcache_devs'].length > 0 %>
+  bcacheDevs = <%= node['telegraf']['bcache_devs'].inspect %><% end -%>
+  bcachePath = "<%= node['telegraf']['bcache_path'] %>"
+<% end -%><% if node['telegraf']['couchdb'] == true %>[[inputs.couchdb]]
+  hosts = <%= node['telegraf']['couchdb_hosts'].inspect %>
+<% end -%><% if node['telegraf']['cpu'] == true %>[[inputs.cpu]]
   percpu = <%= node['telegraf']['cpu_per_cpu'] %>
   totalcpu = <%= node['telegraf']['cpu_total_cpu'] %>
-  <% if node['telegraf']['cpu_drop'].length >0 %>drop = <%= node['telegraf']['cpu_drop'].inspect %> <% end -%>
-<% end -%><% if node['telegraf']['disk'] == true %>[disk]<% if node['telegraf']['disk_mountpoints'].length > 0 %>
-  Mountpoints=<%= node['telegraf']['disk_mountpoints'].inspect %> <% end -%> 
-<% end -%><% if node['telegraf']['disque'] == true %>[disque]
+  <% if node['telegraf']['cpu_drop'].length >0 %>fielddrop = <%= node['telegraf']['cpu_drop'].inspect %> <% end -%>
+<% end -%><% if node['telegraf']['disk'] == true %>[[inputs.disk]]<% if node['telegraf']['disk_mountpoints'].length > 0 %>
+  mount_points=<%= node['telegraf']['disk_mountpoints'].inspect %><% end -%><% if node['telegraf']['disk_ignorefs'].length > 0 %>
+  ignore_fs=<%= node['telegraf']['disk_ignorefs'].inspect %> <% end -%>
+<% end -%><% if node['telegraf']['diskio'] == true %>[[inputs.diskio]]<% if node['telegraf']['diskio_params'] == true %>
+  devices = <%= node['telegraf']['diskio_devices'].inspect %>
+  skip_serial_number = <%= node['telegraf']['diskio_skip_serial_number'] %><% end -%>
+<% end -%><% if node['telegraf']['disque'] == true %>[[inputs.disque]]
   servers = <%= node['telegraf']['disque_servers'].inspect %>
-<% end -%><% if node['telegraf']['docker'] == true %>[docker]
-<% end -%><% if node['telegraf']['elasticsearch'] == true %>[elasticsearch]
+<% end -%><% if node['telegraf']['dns_query'] == true %>[[inputs.dns_query]]
+  servers = <%= node['telegraf']['dns_query_servers'].inspect %>
+  domains = <%= node['telegraf']['dns_query_domains'].inspect %>
+  record_type = "<%= node['telegraf']['dns_query_record_type'] %>"
+  port = <%= node['telegraf']['dns_query_port'] %>
+  timeout = <%= node['telegraf']['dns_query_timeout'] %>
+<% end -%><% if node['telegraf']['docker'] == true %>[[inputs.docker]]
+  endpoint = "<%= node['telegraf']['docker_endpoint'] %>"
+  container_names = <%= ['telegraf']['docker_container_names'].inspect %>
+<% end -%><% if node['telegraf']['dovecot'] == true %>[[inputs.dovecot]]
+  servers = <%= node['telegraf']['dovecot_servers'].inspect %>
+  domains = <%= node['telegraf']['dovecot_domains'].inspect %>
+<% end -%><% if node['telegraf']['elasticsearch'] == true %>[[inputs.elasticsearch]]
   servers = <%= node['telegraf']['elasticsearch_servers'].inspect %>
   local = <%= node['telegraf']['elasticsearch_local'] %>
-<% end -%><% if node['telegraf']['exec'] == true %>[exec]<% node['telegraf']['exec_commands'].each do |command| %>
-[[exec.commands]]
-  command = "<%= command['command'] %>"
-  name = "<%= command['name'] %>"
-  interval = <%= command['interval'] %><% end -%>
-<% end -%><% if node['telegraf']['haproxy'] == true %>[haproxy]
+  cluster_health = <%= node['telegraf']['elasticsearch_cluster_health'] %>
+<% end -%><% if node['telegraf']['exec'] == true %>[[inputs.exec]]
+  command = <%= node['telegraf']['exec_commands'].inspect %>
+  name_suffix = "<%= node['telegraf']['exec_name_suffix'] %>"
+  data_format = "<%= node['telegraf']['exec_data_format'] %>"
+<% end -%><% if node['telegraf']['haproxy'] == true %>[[inputs.haproxy]]
   servers = <%= node['telegraf']['haproxy_servers'].inspect %>
-<% end -%><% if node['telegraf']['httpjson'] == true %>[httpjson]
-  <% node['telegraf']['httpjson_services'].each do |jservice| %>[[httpjson.services]]
+<% end -%><% if node['telegraf']['httpjson'] == true %>[[inputs.httpjson]]
+  <% node['telegraf']['httpjson_services'].each do |jservice| %>
     name = "<%= jservice['name'] %>"
     servers = <%= jservice['servers'].inspect %>
     method = "<%= jservice['method'].upcase %>" <% if jservice['tag_keys'].length > 0 %>
@@ -105,52 +166,76 @@
     [httpjson.services.parameters]
       <% jservice['parameters'].each do |jparam_key, jparam_value| %><%= jparam_key %> = "<%= jparam_value %>"
       <% end -%><% end -%>
-<% end -%><% if node['telegraf']['io'] == true %>[io]
-<% end -%><% if node['telegraf']['kafka'] == true %>[kafka]
-  topic = "<%= node['telegraf']['kafka_topic'] %>"
-  consumerGroupName = "<%= node['telegraf']['kafka_consumer_group_name'] %>"
-  zookeeperPeers = <%= node['telegraf']['kafka_zookeeper_peers'].inspect %>
-  batchSize = <%= node['telegraf']['kafka_batch_size'] %>
-<% end -%><% if node['telegraf']['leofs'] == true %>[leofs]
+<% end -%><% if node['telegraf']['influxdb'] == true %>[[inputs.influxdb]]
+  urls = <%= node['telegraf']['influxdb_urls'].inspect %>
+<% end -%><% if node['telegraf']['jolokia'] == true %>[[inputs.jolokia]]
+  context = "<%= node['telegraf']['jolokia_context'] %>"<% node['telegraf']['jolokia_servers'].each do |jolserver| %>
+  [[inputs.jolokia.servers]]
+    name = "<%= jolserver['name'] %>"
+    host = "<%= jolserver['host'] %>"
+    port = "<%= jolserver['port'] %>"<% if jolserver.key?(:username) %>
+    username = "<%= jolserver['username'] %>"
+    password = "<%= jolserver['password'] %>"<% end -%><% end -%><% node['telegraf']['jolokia_metrics'].each do |jolmetric| %>
+  [[inputs.jolokia.metrics]]
+    name = "<%= jolmetric['name'] %>"
+    jmx  = "<%= jolmetric['jmx'] %>"<% end -%>
+<% end -%><% if node['telegraf']['leofs'] == true %>[[inputs.leofs]]
   servers = <%= node['telegraf']['leofs_servers'].inspect %>
-<% end -%><% if node['telegraf']['lustre2'] == true %>[lustre2]
+<% end -%><% if node['telegraf']['lustre2'] == true %>[[inputs.lustre2]]
   <% if node['telegraf']['lustre2_ost_procfiles'].length > 0 %>ost_procfiles = <%= node['telegraf']['lustre2_ost_procfiles'].inspect %>
   <% end -%><% if node['telegraf']['lustre2_mds_procfiles'].length > 0 %>mds_procfiles = <%= node['telegraf']['lustre2_mds_procfiles'].inspect %> <% end -%>
-<% end -%><% if node['telegraf']['mem'] == true %>[mem]
-<% end -%><% if node['telegraf']['memcached'] == true %>[memcached]
+<% end -%><% if node['telegraf']['mailchimp'] == true %>[[inputs.mailchimp]]
+  api_key = "<%= node['telegraf']['mailchimp_api_key'] %>"
+  days_old = <%= node['telegraf']['mailchimp_days_old'] %><% if node['telegraf']['mailchimp_campaign_id'].length > 0 %>
+  campaign_id = "<%= node['telegraf']['mailchimp_campaign_id'] %>"<% end -%>
+<% end -%><% if node['telegraf']['mem'] == true %>[[inputs.mem]]
+<% end -%><% if node['telegraf']['memcached'] == true %>[[inputs.memcached]]
   servers = <%= node['telegraf']['memcached_servers'].inspect %>
-<% end -%><% if node['telegraf']['mongodb'] == true %>[mongodb]
+<% end -%><% if node['telegraf']['mongodb'] == true %>[[inputs.mongodb]]
   servers = <%= node['telegraf']['mongodb_servers'].inspect %>
-<% end -%><% if node['telegraf']['mysql'] == true %>[mysql]
+<% end -%><% if node['telegraf']['mysql'] == true %>[[inputs.mysql]]
   servers = <%= node['telegraf']['mysql_servers'].inspect %>
-<% end -%><% if node['telegraf']['net'] == true %>[net]<% if node['telegraf']['net_interfaces'].length > 0 %>
+<% end -%><% if node['telegraf']['net'] == true %>[[inputs.net]]<% if node['telegraf']['net_interfaces'].length > 0 %>
   interfaces = <%= node['telegraf']['net_interfaces'].inspect %><% end -%>
-<% end -%><% if node['telegraf']['netstat'] == true %>[netstat]
-<% end -%><% if node['telegraf']['nginx'] == true %>[nginx]
+<% end -%><% if node['telegraf']['net_response'] == true %>[[inputs.net_response]]
+  protocol = "<%= node['telegraf']['net_response_protocol'] %>"
+  address = "<%= node['telegraf']['net_response_address'] %>"
+  timeout = <%= node['telegraf']['net_response_timeout'] %>
+  read_timeout = <%= node['telegraf']['net_response_read_timeout'] %><% if node['telegraf']['net_response_send'].length > 0 %>
+  send = "<%= node['telegraf']['net_response_send'] %>"<% end -%><% if node['telegraf']['net_response_expect'].length > 0 %>
+  expect = "<%= node['telegraf']['net_response_expect'] %>"<% end -%>
+<% end -%><% if node['telegraf']['netstat'] == true %>[[inputs.netstat]]
+<% end -%><% if node['telegraf']['nginx'] == true %>[[inputs.nginx]]
   urls = <%= node['telegraf']['nginx_urls'].inspect %>
-<% end -%><% if node['telegraf']['phpfpm'] %>[phpfpm]<% if node['telegraf']['phpfpm_servers'].length > 0 %>
+<% end -%><% if node['telegraf']['nsq'] == true %>[[inputs.nsq]]
+  endpoints = <%= node['telegraf']['nsq_endpoints'].inspect %>
+<% end -%><% if node['telegraf']['passenger'] == true %>[[inputs.passenger]]
+  command = "<%= node['telegraf']['passenger_command'] %>"
+<% end -%><% if node['telegraf']['phpfpm'] %>[[inputs.phpfpm]]<% if node['telegraf']['phpfpm_servers'].length > 0 %>
   urls = <%= node['telegraf']['phpfpm_servers'].inspect %> <% end -%>
-<% end -%><% if node['telegraf']['ping'] == true %>[ping]
+<% end -%><% if node['telegraf']['ping'] == true %>[[inputs.ping]]
   urls = <%= node['telegraf']['ping_urls'].inspect %>
   count = <%= node['telegraf']['ping_count'] %>
   ping_interval = <%= node['telegraf']['ping_interval'] %>
   timeout = <%= node['telegraf']['ping_timeout'] %><% if node['telegraf']['ping_interface'].length > 0 %>  
   interface = "<%= node['telegraf']['ping_interface'] %>" <% end -%>
-<% end -%><% if node['telegraf']['postgresql'] == true %>[postgresql]<% node['telegraf']['postgresql_servers'].each do |connection| %>
+<% end -%><% if node['telegraf']['postgresql'] == true %>[[inputs.postgresql]]<% node['telegraf']['postgresql_servers'].each do |connection| %>
   [[postgresql.servers]]
   address = "<%= connection['server'] %>" <% if connection['databases'].length > 0 %>
   databases = <%= connection['databases'].inspect %><% end -%>
   <% end -%>
-<% end -%><% if node['telegraf']['procstat'] == true %>[procstat]<% node['telegraf']['procstat_process'].each do |psprocess| %>
-  [[procstat.specifications]]<% if psprocess.key?('pidfile') %>
-    pid_file = "<%= psprocess['pidfile'] %>"<% end -%><% if psprocess.key?('executable') %>
-    executable <%= psprocess['executable'] %><% end -%><% if psprocess.key?('exe') %>
-    exe = "<%= psprocess['exe'] %>"<% end -%><% end -%>
-<% end -%><% if node['telegraf']['prometheus'] == true %>[prometheus]
+<% end -%><% if node['telegraf']['powerdns'] == true %>[[inputs.powerdns]]
+  unix_sockets = <%= node['telegraf']['powerdns_sockets'].inspect %>
+<% end -%><% if node['telegraf']['procstat'] == true %><% node['telegraf']['procstat_process'].each do |psprocess| %>[[inputs.procstat]]
+  prefix = "<%= psprocess.prefix %>"<% if psprocess.key?('pidfile') %>
+  pid_file = "<%= psprocess['pidfile'] %>"<% end -%><% if psprocess.key?('executable') %>
+  pattern <%= psprocess['executable'] %><% end -%><% if psprocess.key?('exe') %>
+  exe = "<%= psprocess['exe'] %>"<% end -%><% end -%>
+<% end -%><% if node['telegraf']['prometheus'] == true %>[[inputs.prometheus]]
   urls = <%= node['telegraf']['prometheus_urls'].inspect %>
-<% end -%><% if node['telegraf']['puppetagent'] == true %>[puppetagent]
+<% end -%><% if node['telegraf']['puppetagent'] == true %>[[inputs.puppetagent]]
   location = "<%= node['telegraf']['puppetagent_location'] %>"
-<% end -%><% if node['telegraf']['rabbitmq'] == true %>[rabbitmq]
+<% end -%><% if node['telegraf']['rabbitmq'] == true %>[[inputs.rabbitmq]]
 <% node['telegraf']['rabbitmq_servers'].each do |rmqserver| %>
   [[rabbitmq.servers]]<% if rmqserver.key?('name') %>
     name = "<%= rmqserver['name'] %>"<% end -%><% if rmqserver.key?('url') %>
@@ -158,14 +243,27 @@
     username = "<%= rmqserver['username'] %>"<% end -%><% if rmqserver.key?('password') %>
     password = "<%= rmqserver['password'] %>"<% end -%><% if rmqserver.key?('nodes') %>
     nodes = <%= rmqserver['nodes'].inspect %><% end -%><% end -%>
-<% end -%><% if node['telegraf']['redis'] == true %>[redis]
+<% end -%><% if node['telegraf']['raindrops'] == true %>[[inputs.raindrops]]
+  urls = <%= node['telegraf']['raindrops_urls'].inspect %>
+<% end -%><% if node['telegraf']['redis'] == true %>[[inputs.redis]]
   servers = <%= node['telegraf']['redis_servers'].inspect %>
-<% end -%><% if node['telegraf']['rethinkdb'] == true %>[rethinkdb]
+<% end -%><% if node['telegraf']['rethinkdb'] == true %>[[inputs.rethinkdb]]
   servers = <%= node['telegraf']['rethinkdb_servers'].inspect %>
-<% end -%><% if node['telegraf']['swap'] == true %>[swap]
-<% end -%><% if node['telegraf']['system'] == true %>[system]
-<% end -%><% if node['telegraf']['zookeeper'] == true %>[zookeeper]
+<% end -%><% if node['telegraf']['riak'] == true %>[[inputs.riak]]
+  servers = <%= node['telegraf']['riak_servers'].inspect %>
+<% end -%><% if node['telegraf']['sqlserver'] == true %>[[inputs.sqlserver]]
+  servers = <%= node['telegraf']['sqlserver_servers'].inspect %>
+<% end -%><% if node['telegraf']['twemproxy'] == true %>[[inputs.twemproxy]]
+  addr = "<%= node['telegraf']['twemproxy_addr'] %>"
+  pools = <%= node['telegraf']['twemproxy_pools'].inspect %>
+<% end -%><% if node['telegraf']['swap'] == true %>[[inputs.swap]]
+<% end -%><% if node['telegraf']['system'] == true %>[[inputs.system]]
+<% end -%><% if node['telegraf']['zookeeper'] == true %>[[inputs.zookeeper]]
   servers = <% node['telegraf']['zookeeper_servers'].inspect %>
+<% end -%><% if node['telegraf']['zfs'] == true %>[[inputs.zfs]]
+  kstatPath = "<%= node['telegraf']['zfs_kstatpath'] %>"
+  kstatMetrics = <%= node['telegraf']['zfs_kstatmetrics'].inspect %>
+  poolMetrics = <%= ['telegraf']['zfs_poolmetrics'] %>
 <% end -%>
 
 
