@@ -226,7 +226,8 @@
   <% end -%>
 <% end -%><% if node['telegraf']['powerdns'] == true %>[[inputs.powerdns]]
   unix_sockets = <%= node['telegraf']['powerdns_sockets'].inspect %>
-<% end -%><% if node['telegraf']['procstat'] == true %><% node['telegraf']['procstat_process'].each do |psprocess| %>[[inputs.procstat]]
+<% end -%><% if node['telegraf']['procstat'] == true %><% node['telegraf']['procstat_process'].each do |psprocess| %>
+[[inputs.procstat]]
   prefix = "<%= psprocess.prefix %>"<% if psprocess.key?('pidfile') %>
   pid_file = "<%= psprocess['pidfile'] %>"<% end -%><% if psprocess.key?('executable') %>
   pattern <%= psprocess['executable'] %><% end -%><% if psprocess.key?('exe') %>
